@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Летающий отсчёт до лета (прецизионная версия)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(145deg, #b5e6ff 0%, #c0e9ff 40%, #f5e6b3 100%);
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow-x: hidden;
+            animation: skyGlow 8s infinite alternate ease-in-out;
+            /* Оптимизация производительности */
+            will-change: background;
+        }
+
+        @keyframes skyGlow {
+            0% { background: linear-gradient(145deg, #b5e6ff, #c0e9ff, #f5d88c); }
+            100% { background: linear-gradient(145deg, #ffdcaa, #ffe5b4, #ffd966); }
+        }
+
+        /* ----- ЖИВОЕ СОЛНЦЕ ----- */
+        .sun {
+            position: absolute;
+            top: 30px;
+            right: 50px;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle at 30% 30%, #fff9b0, #ffb347);
+            border-radius: 50%;
+            box-shadow: 0 0 50px #ffcc33, 0 0 120px #ffaa33;
+            z-index: 5;
+            /* Оптимизация: объединяем анимации */
+            animation: sunGlow 12s infinite alternate ease-in-out;
+            transform-origin: center center;
+            /* Аппаратное ускорение */
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+
+        .sun::after {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            right: -20px;
+            bottom: -20px;
+            background: radial-gradient(circle, rgba(255,255,190,0.4) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: sunRays 4s infinite alternate;
+            /* Аппаратное ускорение */
+            transform: translateZ(0);
+        }
+
+        @keyframes sunGlow {
+            0% { 
+                transform: scale(1) translateY(0); 
+                box-shadow: 0 0 40px #ffcc33, 0 0 90px #ffa500;
+            }
+            25% { transform: scale(1.04) translateY(-5px); }
+            50% { 
+                transform: scale(1.08) translateY(0);
+                box-shadow: 0 0 70px #ffee88, 0 0 150px #ffbb33;
+            }
+            75% { transform: scale(1.04) translateY(3px); }
+            100% { 
+                transform: scale(1) translateY(0);
+                box-shadow: 0 0 40px #ffcc33, 0 0 90px #ffa500;
+            }
+        }
+
+        @keyframes sunRays {
+            0% { opacity: 0.5; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.3); }
+        }
+
+        /* ----- ЛЕТАЮЩИЕ БАБОЧКИ ----- */
+        .butterfly {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            z-index: 15;
+            pointer-events: none;
+            /* Оптимизация производительности */
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+
+        .butterfly::before,
+        .butterfly::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 30px;
+            background: linear-gradient(145deg, #ff9a9e, #fad0c4, #fad0c4);
+            border-radius: 60% 40% 50% 50%;
+            box-shadow: 0 5px 15px rgba(255, 140, 200, 0.6);
+            transform-origin: 50% 50%;
+            animation: flutter 0.3s infinite alternate ease-in-out;
+            /* Оптимизация */
+            will-change: transform;
+        }
+
+        .butterfly::before {
+            left: 0;
+            transform: skewY(10deg) rotate(-15deg);
+            background: linear-gradient(145deg, #fda4af, #fbc2c2, #ffd1d1);
+            border: 1px solid #ffb7c5;
+        }
+
+        .butterfly::after {
+            right: 0;
+            transform: skewY(-10deg) rotate(15deg);
+            background: linear-gradient(145deg, #ffb3c6, #ffe2e2, #ffcfcf);
+            border: 1px solid #ffb7c5;
+        }
+
+        .butterfly span {
+            position: absolute;
+            top: 12px;
+            left: 16px;
+            width: 8px;
+            height: 16px;
+            background: #4b2e1b;
+            border-radius: 30%;
+            transform: rotate(0deg);
+            z-index: 2;
+            box-shadow: 0 0 5px #3f2a1a;
+        }
+
+        .butterfly .spot {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #904e7c;
+            border-radius: 50%;
+            top: 8px;
+            left: 6px;
+            box-shadow: 12px 8px #ac6f9b, 3px 14px #b35d8e;
+            opacity: 0.8;
+        }
+
+        @keyframes flutter {
+            0% { transform: scale(1) rotate(0deg); }
+            100% { transform: scale(1.15) rotate(3deg); }
+        }
+
+        /* Оптимизированные траектории полета (меньше точек для производительности) */
+        .b1 { top: 15%; left: 5%; animation: fly1 18s infinite alternate; }
+        .b2 { top: 70%; left: 85%; animation: fly2 21s infinite alternate; }
+        .b3 { top: 40%; left: 20%; animation: fly3 16s infinite alternate; }
+        .b4 { top: 80%; left: 10%; animation: fly4 24s infinite alternate; }
+        .b5 { top: 20%; left: 70%; animation: fly5 19s infinite alternate; }
+        .b6 { top: 50%; left: 50%; animation: fly6 22s infinite alternate; }
+
+        @keyframes fly1 {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(100px, 30px) rotate(5deg); }
+            100% { transform: translate(20px, 100px) rotate(-3deg); }
+        }
+        @keyframes fly2 {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(-120px, -20px) rotate(-5deg); }
+            100% { transform: translate(-40px, 80px) rotate(5deg); }
+        }
+        @keyframes fly3 {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(80px, -30px) rotate(5deg); }
+            100% { transform: translate(160px, -30px) rotate(6deg); }
+        }
+        @keyframes fly4 {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(-70px, 0px) rotate(0deg); }
+            100% { transform: translate(-180px, 30px) rotate(4deg); }
+        }
+        @keyframes fly5 {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(20px, -90px) rotate(-5deg); }
+            100% { transform: translate(80px, -50px) rotate(12deg); }
+        }
+        @keyframes fly6 {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(-80px, 40px) rotate(5deg); }
+            100% { transform: translate(20px, 40px) rotate(-5deg); }
+        }
+
+        /* ----- ЦЕНТРАЛЬНЫЙ СЧЁТЧИК ----- */
+        .counter-container {
+            position: relative;
+            z-index: 30;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            border-radius: 80px 20px 80px 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 0 0 4px rgba(255, 255, 200, 0.7) inset;
+            padding: 40px 60px;
+            text-align: center;
+            border: 2px solid rgba(255, 241, 150, 0.8);
+            animation: borderGlow 2s infinite alternate;
+            max-width: 90vw;
+        }
+
+        @keyframes borderGlow {
+            0% { box-shadow: 0 20px 40px rgba(0,0,0,0.2), 0 0 0 4px rgba(255, 240, 150, 0.5) inset; }
+            100% { box-shadow: 0 25px 45px rgba(255,200,50,0.3), 0 0 0 6px rgba(255, 255, 180, 0.9) inset; }
+        }
+
+        .title {
+            font-size: clamp(1.8rem, 5vw, 3rem);
+            font-weight: 800;
+            color: #2b4d2b;
+            text-shadow: 3px 3px 0 #ffd966, 5px 5px 0 rgba(255, 140, 0, 0.3);
+            margin-bottom: 20px;
+            letter-spacing: 3px;
+            white-space: nowrap;
+        }
+
+        .timer {
+            display: flex;
+            gap: clamp(10px, 2vw, 30px);
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .time-block {
+            background: #fefee0;
+            border-radius: 30px 10px 30px 10px;
+            padding: clamp(10px, 2vw, 20px) clamp(15px, 2vw, 25px);
+            min-width: clamp(80px, 15vw, 140px);
+            box-shadow: 0 10px 0 #b38b40, 0 15px 25px rgba(0,0,0,0.2);
+            transition: transform 0.15s;
+        }
+
+        .time-block:hover {
+            transform: scale(1.02) translateY(-3px);
+        }
+
+        .time-value {
+            font-size: clamp(2.5rem, 8vw, 4.5rem);
+            font-weight: 900;
+            line-height: 1;
+            color: #1f4f2b;
+            text-shadow: 0 3px 0 #efc37b;
+            font-family: 'Courier New', monospace;
+        }
+
+        .time-label {
+            font-size: clamp(1.2rem, 3vw, 1.6rem);
+            font-weight: 600;
+            color: #6b4226;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-top: 3px dotted #f3b33d;
+            padding-top: 8px;
+            margin-top: 6px;
+        }
+
+        .milliseconds {
+            background: #ffe9b6;
+            border-radius: 30px;
+            margin-top: 20px;
+            padding: clamp(10px, 2vw, 15px) clamp(20px, 4vw, 30px);
+            display: inline-block;
+            font-size: clamp(1.6rem, 4vw, 2.2rem);
+            font-weight: 700;
+            color: #a64b2a;
+            box-shadow: 0 8px 0 #b37436, 0 10px 20px rgba(0,0,0,0.1);
+            border: 2px solid #ffcf9a;
+            min-width: clamp(140px, 30vw, 200px);
+            text-align: center;
+        }
+
+        .milliseconds span {
+            font-size: clamp(2rem, 5vw, 2.6rem);
+            font-weight: 900;
+            color: #7b3f00;
+            font-family: monospace;
+            display: inline-block;
+            min-width: 4rem;
+            text-align: right;
+        }
+
+        .date-sign {
+            margin-top: 15px;
+            font-size: clamp(1rem, 2.5vw, 1.4rem);
+            color: #215b33;
+            background: #ffefc0c0;
+            border-radius: 40px;
+            padding: 8px 18px;
+            backdrop-filter: blur(4px);
+        }
+
+        .cloud {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            background: rgba(255,255,255,0.7);
+            width: 160px;
+            height: 60px;
+            border-radius: 80px;
+            filter: blur(6px);
+            z-index: 1;
+        }
+
+        .cloud2 {
+            top: 120px;
+            left: auto;
+            right: 30px;
+            width: 210px;
+            height: 70px;
+            background: rgba(255,255,255,0.6);
+        }
+
+        /* Специальный класс для режима лета */
+        .summer-mode .time-value {
+            font-size: clamp(2rem, 6vw, 3rem);
+        }
+
+        /* Улучшения доступности */
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            padding: 0;
+            overflow: hidden;
+            border: 0;
+            clip: rect(0 0 0 0);
+        }
+
+        /* Отключаем анимации на слабых устройствах */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sun" role="img" aria-label="Солнце"></div>
+    <div class="cloud"></div>
+    <div class="cloud cloud2"></div>
+
+    <div class="butterfly b1" role="img" aria-label="Бабочка"><span></span><div class="spot"></div></div>
+    <div class="butterfly b2" role="img" aria-label="Бабочка"><span></span><div class="spot"></div></div>
+    <div class="butterfly b3" role="img" aria-label="Бабочка"><span></span><div class="spot"></div></div>
+    <div class="butterfly b4" role="img" aria-label="Бабочка"><span></span><div class="spot"></div></div>
+    <div class="butterfly b5" role="img" aria-label="Бабочка"><span></span><div class="spot"></div></div>
+    <div class="butterfly b6" role="img" aria-label="Бабочка"><span></span><div class="spot"></div></div>
+
+    <div class="counter-container" aria-live="polite" aria-atomic="true">
+        <div class="title">🌼 ДО ЛЕТА ОСТАЛОСЬ 🌼</div>
+        <div class="timer">
+            <div class="time-block">
+                <div class="time-value" id="days">00</div>
+                <div class="time-label">дней</div>
+            </div>
+            <div class="time-block">
+                <div class="time-value" id="hours">00</div>
+                <div class="time-label">часов</div>
+            </div>
+            <div class="time-block">
+                <div class="time-value" id="minutes">00</div>
+                <div class="time-label">минут</div>
+            </div>
+            <div class="time-block">
+                <div class="time-value" id="seconds">00</div>
+                <div class="time-label">секунд</div>
+            </div>
+        </div>
+        <div class="milliseconds">
+            <span id="milliseconds">000</span> мс
+        </div>
+        <div class="date-sign">
+            🦋 Первый день лета: 1 июня 00:00 (по вашему местному времени) 🦋
+        </div>
+    </div>
+
+    <!-- Невидимый элемент для скринридеров -->
+    <div class="visually-hidden" id="summerAnnouncer" aria-live="assertive"></div>
+
+    <script>
+        (function() {
+            'use strict';
+            
+            // Константы
+            const MONTHS = {
+                JUNE: 5 // В JS месяцы с 0: 5 = июнь
+            };
+
+            // Элементы DOM с проверкой
+            const daysEl = document.getElementById('days');
+            const hoursEl = document.getElementById('hours');
+            const minutesEl = document.getElementById('minutes');
+            const secondsEl = document.getElementById('seconds');
+            const msEl = document.getElementById('milliseconds');
+            const summerAnnouncer = document.getElementById('summerAnnouncer');
+            const container = document.querySelector('.counter-container');
+
+            // Валидация элементов
+            const elements = [daysEl, hoursEl, minutesEl, secondsEl, msEl];
+            if (elements.some(el => !el)) {
+                console.error('Критическая ошибка: не найдены элементы таймера');
+                return;
+            }
+
+            // Кэш предыдущих значений
+            let prevDays = -1, prevHours = -1, prevMinutes = -1, prevSeconds = -1;
+            let prevMsText = '';
+            
+            // Состояние
+            let isSummerActive = false;
+            let targetSummerDate = null;
+            
+            // Флаг для RAF
+            let rafId = null;
+            let isActive = true;
+            
+            // Инициализация целевой даты
+            function updateTargetDate() {
+                const now = new Date();
+                const currentYear = now.getFullYear();
+                let summer = new Date(currentYear, MONTHS.JUNE, 1, 0, 0, 0, 0);
+                
+                // Если сейчас уже после начала лета этого года
+                if (now > summer) {
+                    // Берем следующее лето
+                    summer = new Date(currentYear + 1, MONTHS.JUNE, 1, 0, 0, 0, 0);
+                }
+                
+                targetSummerDate = summer;
+            }
+            
+            // Первоначальная установка
+            updateTargetDate();
+
+            // Получение времени до лета
+            function getTimeToSummer() {
+                const now = new Date();
+                
+                // Проверяем, не пора ли обновить целевую дату
+                if (targetSummerDate && now > targetSummerDate) {
+                    updateTargetDate();
+                }
+                
+                const diff = targetSummerDate - now;
+                const isSummer = now.getMonth() === MONTHS.JUNE && now.getDate() === 1 && now.getHours() === 0 && now.getMinutes() === 0;
+                
+                return {
+                    diff: diff, // Положительное число до лета, отрицательное после
+                    isSummer: isSummer, // Точный момент наступления лета
+                    targetDate: targetSummerDate
+                };
+            }
+
+            // Форматирование чисел с правильным округлением
+            function formatNumber(num, digits = 2) {
+                return Math.max(0, Math.floor(num)).toString().padStart(digits, '0');
+            }
+
+            function formatMilliseconds(ms) {
+                // Округляем до ближайшего целого для миллисекунд
+                return Math.round(ms).toString().padStart(3, '0');
+            }
+
+            // Безопасное обновление текста
+            function safeSetText(element, text) {
+                if (element && element.innerText !== text) {
+                    element.innerText = text;
+                }
+            }
+
+            // Обновление класса контейнера
+            function updateContainerClass(isSummer) {
+                if (!container) return;
+                if (isSummer) {
+                    container.classList.add('summer-mode');
+                } else {
+                    container.classList.remove('summer-mode');
+                }
+            }
+
+            // Обновление доступности
+            function announceSummer() {
+                if (summerAnnouncer) {
+                    summerAnnouncer.innerText = 'Наступило лето!';
+                }
+            }
+
+            // Основная функция обновления
+            function updateDisplay() {
+                const { diff, isSummer, targetDate } = getTimeToSummer();
+                
+                // Проверка на точный момент наступления лета
+                const isExactSummer = isSummer;
+                
+                // Если наступило лето
+                if (isExactSummer) {
+                    if (!isSummerActive) {
+                        isSummerActive = true;
+                        announceSummer();
+                        updateContainerClass(true);
+                        
+                        // Показываем праздничное сообщение
+                        safeSetText(daysEl, '🎉');
+                        safeSetText(hoursEl, '🎉');
+                        safeSetText(minutesEl, '🎉');
+                        safeSetText(secondsEl, '🎉');
+                        safeSetText(msEl, 'С ЛЕТОМ! 🎉');
+                    }
+                    return;
+                }
+                
+                // Если лето прошло, но мы всё ещё в режиме праздника
+                if (isSummerActive && diff > 0) {
+                    isSummerActive = false;
+                    updateContainerClass(false);
+                    // Сбросим кэш для принудительного обновления
+                    prevDays = prevHours = prevMinutes = prevSeconds = -1;
+                }
+                
+                // Если лето не активно или вышли из режима
+                if (!isSummerActive) {
+                    // Используем положительную разницу (если diff отрицательный, берем следующее лето)
+                    const positiveDiff = diff > 0 ? diff : Math.abs(diff);
+                    const totalSeconds = Math.floor(positiveDiff / 1000);
+                    
+                    const days = Math.floor(totalSeconds / (3600 * 24));
+                    const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+                    const minutes = Math.floor((totalSeconds % 3600) / 60);
+                    const seconds = Math.floor(totalSeconds % 60);
+                    const milliseconds = positiveDiff % 1000;
+
+                    // Обновляем только изменившиеся значения
+                    if (prevDays !== days) {
+                        safeSetText(daysEl, formatNumber(days));
+                        prevDays = days;
+                    }
+                    
+                    if (prevHours !== hours) {
+                        safeSetText(hoursEl, formatNumber(hours));
+                        prevHours = hours;
+                    }
+                    
+                    if (prevMinutes !== minutes) {
+                        safeSetText(minutesEl, formatNumber(minutes));
+                        prevMinutes = minutes;
+                    }
+                    
+                    if (prevSeconds !== seconds) {
+                        safeSetText(secondsEl, formatNumber(seconds));
+                        prevSeconds = seconds;
+                    }
+
+                    // Миллисекунды с высокой точностью
+                    const msText = formatMilliseconds(milliseconds);
+                    if (prevMsText !== msText) {
+                        safeSetText(msEl, msText);
+                        prevMsText = msText;
+                    }
+                }
+            }
+
+            // Анимационный цикл
+            function animationLoop() {
+                if (!isActive) return;
+                
+                updateDisplay();
+                
+                rafId = requestAnimationFrame(animationLoop);
+            }
+
+            // Управление анимацией
+            function startAnimation() {
+                if (rafId) {
+                    cancelAnimationFrame(rafId);
+                }
+                isActive = true;
+                rafId = requestAnimationFrame(animationLoop);
+            }
+
+            function stopAnimation() {
+                isActive = false;
+                if (rafId) {
+                    cancelAnimationFrame(rafId);
+                    rafId = null;
+                }
+            }
+
+            // Запуск
+            startAnimation();
+
+            // Очистка
+            window.addEventListener('beforeunload', stopAnimation);
+
+            // Обработка видимости вкладки
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    stopAnimation();
+                } else {
+                    // Обновляем целевую дату при возвращении
+                    updateTargetDate();
+                    updateDisplay();
+                    startAnimation();
+                }
+            });
+
+            // Обновление целевой даты каждый час на всякий случай
+            setInterval(updateTargetDate, 3600000); // 1 час
+
+            // Первоначальное обновление
+            updateDisplay();
+            updateContainerClass(false);
+        })();
+    </script>
+</body>
+</html>
